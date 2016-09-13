@@ -14,6 +14,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
+    <ApplicationInsightsResourceId>/subscriptions/276278cf-a464-4c6c-a0f2-cd10697d6df4/resourcegroups/Default-ApplicationInsights-CentralUS/providers/microsoft.insights/components/AzureCompetence1</ApplicationInsightsResourceId>
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DotNet.Web\Microsoft.DotNet.Web.targets" Condition="'$(VSToolsPath)' != ''" />
 </Project>
