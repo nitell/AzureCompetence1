@@ -11,20 +11,21 @@ namespace AzureCompetence1.Controllers
     public class ImagesController : Controller
     {        
         [HttpGet()]
-        public string[] Get()
+        public async Task<IActionResult> Get()
         {
-            return new[] {"Nisse", "Kalle"};
+            return Ok(new[] {"Kalle", "Nisse"});
         }
      
         [HttpGet("{id}")]
-        public HttpResponseMessage Get(string imageName)
+        public async Task<IActionResult> Get(string imageName)
         {
-            return null;
+            return Ok();
         }
 
         [HttpPost]
-        public void Post()
+        public async Task<IActionResult> Post()
         {
+            return Ok();
         }         
     }
 }
