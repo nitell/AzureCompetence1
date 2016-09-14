@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AzureCompetence1.Storage;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -36,6 +37,8 @@ namespace AzureCompetence1
         {
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
+
+            services.AddScoped<IImageStorage>(_ =>  new ImageStorage(Configuration.GetConnectionString("AzureBlobStorage"), Configuration.GetConnectionString("AzureTableStorage")));
 
             services.AddMvc();
         }
