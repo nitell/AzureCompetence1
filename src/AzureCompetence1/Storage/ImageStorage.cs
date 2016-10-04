@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace AzureCompetence1.Storage
 {
     public interface IImageStorage
     {
-        void Insert(string imageName);
+        byte[] GetImage(string imageName, string imageSize);
+        void Insert(string imageName, byte[] incomingData);
         IEnumerable<string> Images { get; }
     }
 
@@ -18,7 +21,7 @@ namespace AzureCompetence1.Storage
     {
         public ImageEntity()
         {
-                
+
         }
 
         public ImageEntity(string name)
@@ -34,40 +37,48 @@ namespace AzureCompetence1.Storage
     public class ImageStorage : IImageStorage
     {
         private CloudStorageAccount blobStorageAccount;
-        private CloudStorageAccount tableStorageAccount;
 
-        public ImageStorage(string blobConnectionString, string tableConnectionString)
+        public ImageStorage(string blobConnectionString)
         {
             blobStorageAccount = CloudStorageAccount.Parse(blobConnectionString);
-            tableStorageAccount = CloudStorageAccount.Parse(tableConnectionString);
         }
 
         public IEnumerable<string> Images
         {
             get
             {
-                var tableClient = tableStorageAccount.CreateCloudTableClient();
-                var table = tableClient.GetTableReference("images");
-                // Create the table if it doesn't exist.
-                table.CreateIfNotExists();
-                
-                return table.ExecuteQuery(new TableQuery<ImageEntity>()).Select(i => i.Name).ToArray();                
+                var blobClient = blobStorageAccount.CreateCloudBlobClient();
+                var container = blobClient.GetContainerReference("images");
+                if (container.Exists())
+                {
+                    foreach (var item in container.ListBlobs(null, false).OfType<CloudBlobDirectory>())
+                    {                        
+                        yield return item.Prefix.TrimEnd('/');
+                    }
+                }
             }
         }
 
-        public void Insert(string imageName)
+        public byte[] GetImage(string imageName, string imageSize)
         {
-            var tableClient = tableStorageAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference("images");
-            // Create the table if it doesn't exist.
-            table.CreateIfNotExists();
+            var blobClient = blobStorageAccount.CreateCloudBlobClient();
+            var container = blobClient.GetContainerReference("images");
+            var directory = container.GetDirectoryReference(imageName.ToLower());            
+            var blockBlob = directory.GetBlockBlobReference(imageSize.ToLower());
+            if (!blockBlob.Exists())
+                return null;
+            var memoryStream = new MemoryStream();
+            blockBlob.DownloadToStream(memoryStream);
+            return memoryStream.ToArray();
+        }
 
-            var img = new ImageEntity(imageName);
-         
-            // Create the TableOperation object that inserts the customer entity.
-            var insertOperation = TableOperation.Insert(img);
-            // Execute the insert operation.
-            table.Execute(insertOperation);
+        public void Insert(string imageName, byte[] image)
+        {
+            var blobClient = blobStorageAccount.CreateCloudBlobClient();
+            var container = blobClient.GetContainerReference("images");
+            container.CreateIfNotExists();
+            var blockBlob = container.GetBlockBlobReference($"{imageName.ToLower()}\\regular");
+            blockBlob.UploadFromByteArray(image, 0, image.Length);
         }
     }
 }

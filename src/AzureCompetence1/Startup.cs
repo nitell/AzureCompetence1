@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+
 namespace AzureCompetence1
 {
     public class Startup
@@ -16,7 +17,7 @@ namespace AzureCompetence1
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
+                .SetBasePath(env.ContentRootPath)                
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
 
@@ -38,9 +39,9 @@ namespace AzureCompetence1
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddScoped<IImageStorage>(_ =>  new ImageStorage(Configuration.GetConnectionString("AzureBlobStorage"), Configuration.GetConnectionString("AzureTableStorage")));
+            services.AddScoped<IImageStorage>(_ =>  new ImageStorage(Configuration.GetConnectionString("AzureBlobStorage")));
 
-            services.AddMvc();
+            services.AddMvc();            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline
@@ -54,6 +55,7 @@ namespace AzureCompetence1
             app.UseApplicationInsightsExceptionTelemetry();
 
             app.UseMvc();
+            app.UseStaticFiles();
         }
     }
 }
